@@ -1,22 +1,24 @@
 "use client";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-import { getAvailableRides, acceptRide, completeRide } from "../../lib/api";
+import { getAvailableRides, acceptRide, completeRide } from "@/lib/api";
 
 export default function DriverDashboard() {
   const { user } = useAuth();
   const [rides, setRides] = useState([]);
 
   useEffect(() => {
-    if (user?.role === "driver") {
+    if (!user) return;
+    if (user.role === "driver") {
       fetchRides();
     }
   }, [user]);
 
   const fetchRides = async () => {
-    const res = await getAvailableRides();
-    setRides(res.rides || []);
-  };
+  if (!user) return;
+  const res = await getAvailableRides(user);
+  setRides(res.rides || []);
+};
 
   const handleAccept = async (ride_id) => {
     const res = await acceptRide({ ride_id, driver_id: user.id });
@@ -32,9 +34,9 @@ export default function DriverDashboard() {
     fetchRides();
   };
 
-  if (!user || user.role !== "driver") {
-    return <p className="text-center mt-10 text-red-800">Only drivers can access this page.</p>;
-  }
+  if (!user) return <p>Loading user...</p>;
+  if (user.role !== "driver") return <p>Only drivers can access this page.</p>;
+
 
   return (
     <div className="p-6">
@@ -45,7 +47,7 @@ export default function DriverDashboard() {
       ) : (
         <ul className="space-y-4 text-black">
           {rides.map((ride) => (
-            <li key={ride.id} className="p-4 border rounded-xl bg-white shadow-md">
+            <li key={ride.id} className="p-4 border rounded-xl bg-white shadow-md text-black">
               <p><strong>Pickup:</strong> {ride.pickup_location}</p>
               <p><strong>Dropoff:</strong> {ride.dropoff_location}</p>
               <p><strong>Rider:</strong> {ride.rider_name}</p>

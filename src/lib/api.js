@@ -1,74 +1,152 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const registerUser = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/register`, {
+//Profile details
+export const fetchUserProfile = async (userId) => {
+  const res = await fetch(`${BASE_URL}/profile`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ user_id: userId }),
   });
-  return res.json();
+
+  const data = await res.json();
+  console.log("profile fetched data:", data);
+  if (!res.ok) throw new Error(data.message || "Failed to fetch user profile");
+  return data.profile;
 };
 
-export const loginUser = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/login`, {
+// Register user
+export const registerUser = async ({ name, email, password, role, vehicle_number,
+  vehicle_model }) => {
+  const res = await fetch(`${BASE_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ name, email, password, role, vehicle_number,
+      vehicle_model }),
   });
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Registration failed");
+  return data;
 };
 
-export const requestRide = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/request-ride`, {
+// Login user
+export const loginUser = async ({ email, password }) => {
+  const res = await fetch(`${BASE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ email, password }),
   });
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Login failed");
+  return data;
 };
 
-export const getRideHistory = async (user_id, role) => {
-  const res = await fetch(`${BACKEND_URL}/rides?user_id=${user_id}&role=${role}`);
-  return res.json();
+// Logout user 
+export const logoutUser = async () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  return true;
 };
 
-export const completeRide = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/complete-ride`, {
+//.................RIDE DETAILS.........../////////////////////////
+
+// Request a ride
+export const requestRide = async (rideData) => {
+  const res = await fetch(`${BASE_URL}/rides/request-ride`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(rideData),
   });
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.log("ride requesting error:", data);
+    throw new Error(data.message || "Request ride failed");
+  }
+  return data;
 };
 
-export const rateDriver = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/rate-driver`, {
+// Get ride history
+export const getRideHistory = async (userId, role) => {
+  const res = await fetch(`${BASE_URL}/rides/history?user_id=${userId}&role=${role}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch ride history");
+  return data;
+};
+
+// Complete a ride
+export const completeRide = async (rideId, updates) => {
+  const res = await fetch(`${BASE_URL}/complete-ride`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ rideId, updates }),
   });
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Ride completion failed");
+  return data;
 };
 
+// Rate driver
+export const rateDriver = async ({ rideId, rating }) => {
+  const res = await fetch(`${BASE_URL}/rate-driver`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rideId, rating }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Rating failed");
+  return data;
+};
+
+// Get available rides
 export const getAvailableRides = async () => {
-  const res = await fetch(`${BACKEND_URL}/rides/available`);
-  return res.json();
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user.id || !user.role) {
+    throw new Error("Missing user_id or role in local storage");
+  }
+
+  const res = await fetch(
+    `${BASE_URL}/rides/available?user_id=${user.id}&role=${user.role}`
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch available rides");
+  return data;
 };
 
-export const acceptRide = async (data) => {
-  const res = await fetch(`${BACKEND_URL}/rides/accept`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+
+
+// Accept ride
+export const acceptRide = async ({ ride_id, driver_id }) => {
+  const res = await fetch(`${BASE_URL}/api/rides/accept`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ride_id, driver_id })
   });
-  return res.json();
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Error ${res.status}: ${errorText}`);
+  }
+
+  return await res.json();
 };
+
+//.................PAYMENT DETAILS.........../////////////////////////
 
 export const createPaymentIntent = async (rideId) => {
-  const res = await fetch(`${BACKEND_URL}/payments/create-intent`, {
+  const res = await fetch(`${BASE_URL}/payments/createIntent`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ rideId }),
   });
-  return res.json();
+
+  const data = await res.json();
+  console.log("Payment intent response:", data);
+  if (!res.ok) throw new Error(data.message || "Failed to create payment intent");
+  return data;
 };

@@ -17,23 +17,29 @@ export default function LoginPage() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
-      setMessage("✅ Login successful!");
-      window.location.href = "/dashboard"; 
+      setMessage("Login successful!");
+      if (res.user.role === "rider") {
+        window.location.href = "/dashboard";
+      } else if (res.user.role === "driver") {
+        window.location.href = "/driver-dashboard";
+      } else {
+        window.location.href = "/";
+      }
     } catch (err) {
-      setMessage("❌ " + err.message);
+      setMessage("Login failed: " + err.message);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center space-x-8">
-      <form onSubmit={handleSubmit} className="bg-black p-10 rounded-xl shadow-md w-100 space-y-4 ">
-        <h2 className="text-xl font-bold text-center">Login</h2>
+    <div className="min-h-screen flex items-center justify-right  space-x-4">
+      <form onSubmit={handleSubmit} className="bg-black p-15 rounded-xl shadow-md w-100 space-y-4">
+        <h2 className="text-xl font-bold text-center text-white">Login</h2>
         <input
           type="email"
           placeholder="Email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded text-white"
           required
         />
         <input
@@ -41,13 +47,13 @@ export default function LoginPage() {
           placeholder="Password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded text-white"
           required
         />
         <button type="submit" className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
           Login
         </button>
-        {message && <p className="text-center text-sm mt-2">{message}</p>}
+        {message && <p className="text-center text-sm mt-2 text-white">{message}</p>}
       </form>
     </div>
   );

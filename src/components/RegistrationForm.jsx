@@ -18,7 +18,7 @@ export default function RegistrationForm() {
     res.error ? alert(res.error) : alert("Registered successfully!");
     window.location.href = "/login";
     } catch (err) {
-      alert("❌ " + err.message);
+      alert("Registration failed: " + err.message);
     }
   };
 

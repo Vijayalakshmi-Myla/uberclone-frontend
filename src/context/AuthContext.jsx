@@ -1,11 +1,39 @@
-"use client"
-import { createContext, useState, useContext } from "react";
+"use client";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
-};
+  const router = useRouter();
 
-export const useAuth = () => useContext(AuthContext);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    router.push("/login"); 
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

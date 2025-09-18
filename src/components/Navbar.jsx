@@ -1,20 +1,28 @@
 "use client";
 import Link from "next/link";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-  const { user, setUser } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
-    <nav className="flex justify-between items-center px-6 py-4 bg-black text-white">
-      <Link href="/" className="text-xl font-bold">Ride App</Link>
+    <nav className="p-4 bg-gray-900 text-white flex justify-between items-center">
+      <Link href="/" className="text-xl font-bold">RideApp</Link>
+
       <div className="space-x-4">
         {user ? (
           <>
-            <Link href="/ride-history">History</Link>
-            {user.role === "rider" && <Link href="/request-ride">Request Ride</Link>}
+            {user.role === "rider" && <Link href="/dashboard">Dashboard</Link>}
             {user.role === "driver" && <Link href="/driver-dashboard">Dashboard</Link>}
-            <button onClick={() => setUser(null)} className="ml-4">Logout</button>
+
+            <Link href="/profile">Profile</Link>
+
+            <button
+              onClick={logout}
+              className="bg-red-600 px-3 py-1 rounded hover:bg-red-700"
+            >
+              Logout
+            </button>
           </>
         ) : (
           <>
